@@ -1,0 +1,71 @@
+metadata:
+  namespace: tls-prod
+  app: "fe"
+
+# Default values for tls-app.
+replicaCount: 1
+
+image:
+  repository: nexus.demo.think-it.work:6666/training-licenses-sharing
+  pullPolicy: Always
+  tag: latest
+  containerPort:
+    frontend: 80
+    backend: 8080
+
+imagePullSecrets: regsecret
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  hosts:
+      host: demo.think-it.work
+      paths:
+        frontend: "/"
+        backend: "/api"
+
+resources:
+  frontend:
+    limits:
+      cpu: 250m
+      memory: 128Mi
+    requests:
+      cpu: 24m
+      memory: 64Mi
+  backend:
+    limits:
+      cpu: 250m
+      memory: 512Mi
+    requests:
+      cpu: 24m
+      memory: 64Mi
+
+# Frontend configmap
+configmap:
+  enabled: true
+  name: nginx-conf
+
+# Env Vars
+env:
+  frontend:
+    - name: API_URL
+      value: "<API_URL>"
+  backend:
+    - name: APPLICATION_PORT
+      value: "8080"
+    - name: APPLICATION_DATABASE_URL
+      value: "jdbc:postgresql://postgresql-tls:5432/TLS"
+    - name: APPLICATION_DATABASE_USERNAME
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: username
+    - name: APPLICATION_DATABASE_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password

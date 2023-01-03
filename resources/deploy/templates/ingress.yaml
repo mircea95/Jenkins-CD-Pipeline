@@ -1,0 +1,34 @@
+{{- if .Values.ingress.enabled }}
+{{- $app := .Values.metadata.app -}}
+{{- $name := printf "%s-%s" .Chart.Name .Values.metadata.app -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: {{ .Values.metadata.namespace }}
+  name: {{ $name }}-ingress
+  labels:
+    name: {{ $name }}-ingress
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  rules:
+  - host: "{{ .Values.metadata.namespace }}.{{ .Values.ingress.hosts.host }}"
+    http:
+      paths:
+      {{- if eq $app "be" }}
+      - pathType: Prefix
+        path: {{ .Values.ingress.hosts.paths.backend }}
+        backend:
+          service:
+            name: {{ $name }}-services
+            port: 
+              number: {{ .Values.service.port }}
+      {{- else }}
+      - pathType: Prefix
+        path: {{ .Values.ingress.hosts.paths.frontend  }}
+        backend:
+          service:
+            name: {{ $name }}-services
+            port:
+              number:  {{ .Values.service.port }}
+      {{- end }}
+{{- end }}

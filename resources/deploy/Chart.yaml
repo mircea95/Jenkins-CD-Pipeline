@@ -1,0 +1,13 @@
+apiVersion: v2
+name: tls
+description: A Helm chart for TLS internship Project
+type: application
+
+# This is the chart version. 
+version: 0.1.0
+
+# This is the version number of the application being deployed.
+appVersion: "latest"
+maintainers:
+  - name: "Mircea Bularga"
+

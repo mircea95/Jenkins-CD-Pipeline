@@ -1,0 +1,49 @@
+{{- $app := .Values.metadata.app -}}
+{{- $name := printf "%s-%s" .Chart.Name .Values.metadata.app -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: {{ .Values.metadata.namespace }}
+  name: {{ $name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+        deploymentTime: {{ now | date "2006-01-02T15-04-05" }}
+        appVersion: {{ .Chart.AppVersion }}
+    spec:
+    {{- if eq $app "fe" }}
+      volumes:
+        - name: nginx
+          configMap: 
+            name: {{ .Values.configmap.name }}
+    {{- end }}
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecrets }}
+      containers:
+      - name: {{ $name }}
+        image: "{{ .Values.image.repository }}-{{ $app }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        {{- if eq $app "fe"}}
+        env: {{- toYaml .Values.env.frontend | nindent 8 }}
+        {{- else}}
+        env: {{- toYaml .Values.env.backend | nindent 8 }}
+        {{- end}}
+        {{- if eq $app "fe"}}
+        resources: {{- toYaml .Values.resources.frontend | nindent 10 }}
+        {{- else }}
+        resources: {{- toYaml .Values.resources.backend | nindent 10 }}
+        {{- end }}
+        ports:
+        {{- if eq $app "fe" }}
+        - containerPort: {{ .Values.image.containerPort.frontend }}
+        volumeMounts:
+            - name: nginx
+              mountPath: /etc/nginx/conf.d/
+        {{- else }}
+        - containerPort: {{ .Values.image.containerPort.backend }}
+        {{- end }}

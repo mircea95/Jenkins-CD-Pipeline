@@ -1,0 +1,18 @@
+{{- $app := .Values.metadata.app -}}
+{{- $name := printf "%s-%s" .Chart.Name .Values.metadata.app -}}
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: {{ .Values.metadata.namespace }}
+  name: {{ $name }}-services
+spec:
+  selector:
+    app: {{ $name }}
+  ports:
+  - port: {{ .Values.service.port }}
+  {{- if eq $app "fe" }}
+    targetPort: {{ .Values.image.containerPort.frontend }}
+  {{- else }}
+    targetPort: {{ .Values.image.containerPort.backend }}
+  {{- end }}
+
